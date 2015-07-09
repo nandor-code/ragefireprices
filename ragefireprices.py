@@ -87,11 +87,18 @@ def rfpiloop():
 
 			if ", '" in line or "SYSTEMWIDE_MESSAGE" in line:
 				class MyOpener(FancyURLopener):
-					version = 'RFPILogger1'  
+					version = 'RFPILogger1' 
 				
-				myopener = MyOpener()
-				url = "http://www.ragefireprices.info/api/in.php?submitter=" + str(character) + "&line=" + str(line)
-				page = myopener.open(url)
+				try:
+					myopener = MyOpener()
+					url = "http://ragefireprices.info/api/in.php?submitter=" + str(character) + "&password=" + str(password) + "&line=" + str(line)
+					page = myopener.open(url)
+					print(str(line))
+				except socket.gaierror:
+					print("::: Connection Error, line unsent :::")
+					continue
+
+				
 	
 	print ( "" )
 	print ( "Done." )
@@ -108,7 +115,7 @@ else:
 global config
 
 config = configparser.ConfigParser()
-
+password = config['settings']['password']
 config['Settings'] = {'AutoDectectLog': "False" }
 config['State'] = {'LastTimeCode': str(int(time.time())) }
 				   
