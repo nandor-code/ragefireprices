@@ -61,11 +61,11 @@ def get_line_time(s):
 	
 	return epoch
 
-def rfpiloop():
+def rfpiloop(p_start_time):
 
 	line_time = int( config['State']['LastTimeCode'] )
 
-	print("Scanning logs for new data...")
+	## print("Scanning logs for new data...")
 
 	with open(log_file) as f:
 		for line in f:
@@ -77,9 +77,13 @@ def rfpiloop():
 			if "tells the raid, '" in line: continue
 
 			line_time = get_line_time( line )
+			
+			## Skip lines from before the parser was launched
+			if line_time <= p_start_time:
+				continue
 
+			## Skip lines older than last seen time
 			if line_time <= int( config['State']['LastTimeCode'] ):
-				#print( "Skipping line " + str(line_time) + " because it is too old" )
 				continue
 
 			print( ".", end='' )
@@ -100,10 +104,14 @@ def rfpiloop():
 
 				
 	
-	print ( "" )
 	print ( "Done." )
 	return line_time
 
+	
+## Parser start time
+p_start_time = time.time()	
+	
+	
 ## Prepare/setup/get our rfpi directory and Settings
 config_file = "Settings.ini"
 if os.path.exists(config_file):
@@ -115,11 +123,11 @@ else:
 global config
 
 config = configparser.ConfigParser()
-password = config['settings']['password']
 config['Settings'] = {'AutoDectectLog': "False" }
 config['State'] = {'LastTimeCode': str(int(time.time())) }
 				   
 config.read(config_file)
+password = config['Settings']['password']
 
 ## Check the log dir is accurate
 global log_dir
@@ -145,13 +153,16 @@ if config['Settings']['autodectectlog'] != "True":
 	else:
 		sys.exit("HALT: No log exists for " + character)
 
+		
+		
+
 ## Loop		
 while True:
 	## Do our thang
 	if config['Settings']['AutoDectectLog'] == "True":
 		log_file, character = get_latest_log( log_dir )
 
-	latest_epoch = rfpiloop()
+	latest_epoch = rfpiloop(p_start_time)
 
 	config['State']['LastTimeCode'] = str(latest_epoch)
 	with open( config_file, 'w' ) as cf:
