@@ -23,7 +23,8 @@ def get_latest_log(p):
 	if newest_time == 0:
 		sys.exit("HALT: No log exists" )
 
-	print ( "Detected \'" + newest_file + "\' as newest log using it..." )
+	print ( "------------Scanning Logs------------" )
+	print ( "Detected \'" + newest_file + "\' as newest log using it." )
 
 	pattern = re.compile(r".*eqlog_(?P<char>.*?)_ragefire.txt", re.VERBOSE)
 	match = pattern.match(newest_file)
@@ -32,6 +33,11 @@ def get_latest_log(p):
 		sys.exit("HALT: No log name is an invalid format" )
 
 	char = match.group("char")
+
+	print( "Using Log: " + newest_file )
+	print( "Using CharacterName: " + char )
+	print ( "--------Done Scanning Logs--------" )
+	print( "" )
 
 	return newest_file, char
 	
@@ -99,14 +105,17 @@ if os.path.exists(config_file):
 else:
 	sys.exit("Settings.ini not found!\n\nPlease create a file called Settings.ini in the following format:\n\n[Settings]\nCharacter=YourcharacterName\nLogDir=c:\path\\to\\eq1\\logs\\")
 
+global config
+
 config = configparser.ConfigParser()
 
-config['Settings'] = {'AutoDectectLog': False }
+config['Settings'] = {'AutoDectectLog': "False" }
 config['State'] = {'LastTimeCode': str(int(time.time())) }
 				   
 config.read(config_file)
 
 ## Check the log dir is accurate
+global log_dir
 log_dir = config['Settings']['LogDir']
 
 if os.path.exists(log_dir):
@@ -114,9 +123,10 @@ if os.path.exists(log_dir):
 else:
 	sys.exit("HALT: EverQuest Log directory incorrect, check Settings.ini")
 
-if config['Settings']['AutoDectectLog'] == True:
-	log_file, character = get_latest_log( log_dir )
-else:
+global log_file
+global character
+
+if config['Settings']['autodectectlog'] != "True":
 	character = config['Settings']['Character']
 	character = character.lower()
 	character = character.title()
@@ -128,13 +138,12 @@ else:
 	else:
 		sys.exit("HALT: No log exists for " + character)
 
-print( "Using Log: " + log_file )
-print( "Using CharacterName: " + character )
-print( "" )
-
 ## Loop		
 while True:
 	## Do our thang
+	if config['Settings']['AutoDectectLog'] == "True":
+		log_file, character = get_latest_log( log_dir )
+
 	latest_epoch = rfpiloop()
 
 	config['State']['LastTimeCode'] = str(latest_epoch)
