@@ -1,0 +1,1 @@
+..\Scripts\build_exe.exe ragefireprices.py
