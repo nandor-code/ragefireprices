@@ -39,6 +39,9 @@ def get_latest_log(p):
 	print ( "--------Done Scanning Logs--------" )
 	print( "" )
 
+	char = char.lower()
+	char = char.title()
+
 	return newest_file, char
 	
 def date_to_epoch(s):
