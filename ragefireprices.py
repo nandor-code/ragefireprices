@@ -42,7 +42,7 @@ def get_latest_log(p):
 	return newest_file, char
 	
 def date_to_epoch(s):
-	pattern = '%a %b %m %H:%M:%S %Y'
+	pattern = '%a %b %d %H:%M:%S %Y'
 	epoch = int(time.mktime(time.strptime(s, pattern)))
 	#print( "epoch = ", epoch )
 	return epoch
@@ -61,9 +61,12 @@ def get_line_time(s):
 	
 	return epoch
 
-def rfpiloop(p_start_time):
+def rfpiloop():
 
-	line_time = int( config['State']['LastTimeCode'] )
+	ret_time = int( config['State']['LastTimeCode'] )
+	
+	print( "------------Starting Parse------------" )
+	print( "Using Start Time: " + time.strftime( "%a %b %d %H:%M:%S %Y", time.localtime( ret_time ) ) )
 
 	## print("Scanning logs for new data...")
 
@@ -78,13 +81,11 @@ def rfpiloop(p_start_time):
 
 			line_time = get_line_time( line )
 			
-			## Skip lines from before the parser was launched
-			if line_time <= p_start_time:
-				continue
-
 			## Skip lines older than last seen time
 			if line_time <= int( config['State']['LastTimeCode'] ):
 				continue
+
+			ret_time = line_time
 
 			print( ".", end='' )
 			sys.stdout.flush()
@@ -97,19 +98,19 @@ def rfpiloop(p_start_time):
 					myopener = MyOpener()
 					url = "http://ragefireprices.info/api/in.php?submitter=" + str(character) + "&password=" + str(password) + "&line=" + str(line)
 					page = myopener.open(url)
-					print(str(line))
+					#print(str(line))
 				except socket.gaierror:
 					print("::: Connection Error, line unsent :::")
 					continue
 
 				
-	
-	print ( "Done." )
-	return line_time
+	print( "" )
+	print( "------------Parse Complete------------" )
+	return ret_time
 
 	
 ## Parser start time
-p_start_time = time.time()	
+p_start_time = int(time.time())
 	
 	
 ## Prepare/setup/get our rfpi directory and Settings
@@ -153,8 +154,8 @@ if config['Settings']['autodectectlog'] != "True":
 	else:
 		sys.exit("HALT: No log exists for " + character)
 
-		
-		
+# seed the last time code with the start-time of the parser so we ignore really old lines between parses.
+config['State']['LastTimeCode'] = str(p_start_time) 
 
 ## Loop		
 while True:
@@ -162,7 +163,7 @@ while True:
 	if config['Settings']['AutoDectectLog'] == "True":
 		log_file, character = get_latest_log( log_dir )
 
-	latest_epoch = rfpiloop(p_start_time)
+	latest_epoch = rfpiloop()
 
 	config['State']['LastTimeCode'] = str(latest_epoch)
 	with open( config_file, 'w' ) as cf:
