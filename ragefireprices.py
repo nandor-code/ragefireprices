@@ -64,6 +64,15 @@ def get_line_time(s):
 	
 	return epoch
 
+def clean_line(s):
+	clean_s = ""
+
+	for	c in s:
+		if( ord( c ) < 128 ):
+			clean_s += c
+
+	return clean_s
+
 def rfpiloop():
 
 	ret_time = int( config['State']['LastTimeCode'] )
@@ -92,6 +101,8 @@ def rfpiloop():
 
 			print( ".", end='' )
 			sys.stdout.flush()
+
+			line = clean_line( line )
 
 			if ", '" in line or "SYSTEMWIDE_MESSAGE" in line:
 				class MyOpener(FancyURLopener):
@@ -131,6 +142,7 @@ config['Settings'] = {'AutoDectectLog': "False" }
 config['State'] = {'LastTimeCode': str(int(time.time())) }
 				   
 config.read(config_file)
+
 password = config['Settings']['password']
 
 ## Check the log dir is accurate
