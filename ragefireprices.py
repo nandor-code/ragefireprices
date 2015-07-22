@@ -8,11 +8,11 @@ import urllib.request
 import glob
 from urllib.request import FancyURLopener
 
-def get_latest_log(p):
+def get_latest_log(p,server):
 	newest_time = 0
 	newest_file = ""
-	file_pattern = p + "/*_ragefire.txt"
-	print( "Searching for files: " + file_pattern )
+	file_pattern = p + "/*_" + server + ".txt"
+	#print( "Searching for files: " + file_pattern )
 
 	for fname in glob.glob(file_pattern):
 		file_time = os.path.getmtime(fname)
@@ -26,7 +26,7 @@ def get_latest_log(p):
 	print ( "------------Scanning Logs------------" )
 	print ( "Detected \'" + newest_file + "\' as newest log using it." )
 
-	pattern = re.compile(r".*eqlog_(?P<char>.*?)_ragefire.txt", re.VERBOSE)
+	pattern = re.compile(r".*eqlog_(?P<char>.*?)_" + server + ".txt", re.VERBOSE)
 	match = pattern.match(newest_file)
 
 	if match is None:
@@ -34,10 +34,9 @@ def get_latest_log(p):
 
 	char = match.group("char")
 
-	print( "Using Log: " + newest_file )
-	print( "Using CharacterName: " + char )
+	#print( "Using Log: " + newest_file )
+	#print( "Using CharacterName: " + char )
 	print ( "--------Done Scanning Logs--------" )
-	print( "" )
 
 	char = char.lower()
 	char = char.title()
@@ -73,14 +72,13 @@ def clean_line(s):
 
 	return clean_s
 
-def rfpiloop():
+def rfpiloop(server):
 
 	ret_time = int( config['State']['LastTimeCode'] )
 	
-	print( "------------Starting Parse------------" )
-	print( "Using Start Time: " + time.strftime( "%a %b %d %H:%M:%S %Y", time.localtime( ret_time ) ) )
-
-	## print("Scanning logs for new data...")
+	#print( "------------Starting Parse------------" )
+	#print( "Using Start Time: " + time.strftime( "%a %b %d %H:%M:%S %Y", time.localtime( ret_time ) ) )
+	#print("Scanning logs for new data...")
 
 	with open(log_file) as f:
 		for line in f:
@@ -110,16 +108,15 @@ def rfpiloop():
 				
 				try:
 					myopener = MyOpener()
-					url = "http://ragefireprices.info/api/in.php?submitter=" + str(character) + "&password=" + str(password) + "&line=" + str(line)
+					url = "http://ragefireprices.info/api/in.php?submitter=" + str(character) + "&password=" + str(password) + "&server=" + str(server) + "&line=" + str(line)
 					page = myopener.open(url)
-					#print(str(line))
+					print(str(line))
 				except socket.gaierror:
 					print("::: Connection Error, line unsent :::")
 					continue
 
 				
-	print( "" )
-	print( "------------Parse Complete------------" )
+	#print( "------------Parse Complete------------" )
 	return ret_time
 
 	
@@ -144,6 +141,10 @@ config['State'] = {'LastTimeCode': str(int(time.time())) }
 config.read(config_file)
 
 password = config['Settings']['password']
+server = config['Settings']['server']
+server = server.lower()
+while server not in ["ragefire","lockjaw"]:
+	sys.exit("HALT: Server entered in settings.ini not supported. Ragefire or Lockjaw only")
 
 ## Check the log dir is accurate
 global log_dir
@@ -163,7 +164,7 @@ if config['Settings']['autodectectlog'] != "True":
 	character = character.title()
 	
 	## Define our log filename, check it exists 
-	log_file = log_dir + "\eqlog_" + character + "_ragefire.txt"
+	log_file = log_dir + "\eqlog_" + character + "_" + server + ".txt"
 	if os.path.exists(log_file):
 		pass
 	else:
@@ -176,9 +177,9 @@ config['State']['LastTimeCode'] = str(p_start_time)
 while True:
 	## Do our thang
 	if config['Settings']['AutoDectectLog'] == "True":
-		log_file, character = get_latest_log( log_dir )
+		log_file, character = get_latest_log(log_dir,server)
 
-	latest_epoch = rfpiloop()
+	latest_epoch = rfpiloop(server)
 
 	config['State']['LastTimeCode'] = str(latest_epoch)
 	with open( config_file, 'w' ) as cf:
