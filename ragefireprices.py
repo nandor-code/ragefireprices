@@ -8,11 +8,13 @@ import urllib.request
 import glob
 from urllib.request import FancyURLopener
 
+version = 2.3.1
+
 def get_latest_log(p,server):
 	newest_time = 0
 	newest_file = ""
 	file_pattern = p + "/*_" + server + ".txt"
-	#print( "Searching for files: " + file_pattern )
+	print( "Searching for files: " + file_pattern )
 
 	for fname in glob.glob(file_pattern):
 		file_time = os.path.getmtime(fname)
@@ -34,8 +36,8 @@ def get_latest_log(p,server):
 
 	char = match.group("char")
 
-	#print( "Using Log: " + newest_file )
-	#print( "Using CharacterName: " + char )
+	print( "Using Log: " + newest_file )
+	print( "Using CharacterName: " + char )
 	print ( "--------Done Scanning Logs--------" )
 
 	char = char.lower()
@@ -46,7 +48,7 @@ def get_latest_log(p,server):
 def date_to_epoch(s):
 	pattern = '%a %b %d %H:%M:%S %Y'
 	epoch = int(time.mktime(time.strptime(s, pattern)))
-	#print( "epoch = ", epoch )
+	print( "epoch = ", epoch )
 	return epoch
 
 def get_line_time(s):
@@ -76,8 +78,8 @@ def rfpiloop(server):
 
 	ret_time = int( config['State']['LastTimeCode'] )
 	
-	#print( "------------Starting Parse------------" )
-	#print( "Using Start Time: " + time.strftime( "%a %b %d %H:%M:%S %Y", time.localtime( ret_time ) ) )
+	print( "------------Starting Parse------------" )
+	print( "Using Start Time: " + time.strftime( "%a %b %d %H:%M:%S %Y", time.localtime( ret_time ) ) )
 	#print("Scanning logs for new data...")
 
 	with open(log_file) as f:
@@ -88,6 +90,10 @@ def rfpiloop(server):
 			if "tells the group, '" in line: continue
 			if "tells the guild, '" in line: continue
 			if "tells the raid, '" in line: continue
+			if "you say, '" in line: continue
+			if "] you told" in line: continue
+			if "you tell your party, '" in line: continue
+			if "you say to your guild, '" in line: continue
 
 			line_time = get_line_time( line )
 			
@@ -108,7 +114,7 @@ def rfpiloop(server):
 				
 				try:
 					myopener = MyOpener()
-					url = "http://ragefireprices.info/api/in.php?submitter=" + str(character) + "&password=" + str(password) + "&server=" + str(server) + "&line=" + str(line)
+					url = "http://ragefireprices.info/api/in.php?c=" + str(character) + "&p=" + str(password) + "&s=" + str(server) + "&v=" + str(version) + "&l=" + str(line)
 					page = myopener.open(url)
 					print(str(line))
 				except socket.gaierror:
@@ -116,7 +122,7 @@ def rfpiloop(server):
 					continue
 
 				
-	#print( "------------Parse Complete------------" )
+	print( "------------Parse Complete------------" )
 	return ret_time
 
 	
