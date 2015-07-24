@@ -8,8 +8,6 @@ import urllib.request
 import glob
 from urllib.request import FancyURLopener
 
-version = 2.3.1
-
 def get_latest_log(p,server):
 	newest_time = 0
 	newest_file = ""
@@ -48,7 +46,6 @@ def get_latest_log(p,server):
 def date_to_epoch(s):
 	pattern = '%a %b %d %H:%M:%S %Y'
 	epoch = int(time.mktime(time.strptime(s, pattern)))
-	print( "epoch = ", epoch )
 	return epoch
 
 def get_line_time(s):
@@ -74,7 +71,7 @@ def clean_line(s):
 
 	return clean_s
 
-def rfpiloop(server):
+def rfpiloop(server,pversion):
 
 	ret_time = int( config['State']['LastTimeCode'] )
 	
@@ -114,7 +111,7 @@ def rfpiloop(server):
 				
 				try:
 					myopener = MyOpener()
-					url = "http://ragefireprices.info/api/in.php?c=" + str(character) + "&p=" + str(password) + "&s=" + str(server) + "&v=" + str(version) + "&l=" + str(line)
+					url = "http://ragefireprices.info/api/in.php?c=" + str(character) + "&p=" + str(password) + "&s=" + str(server) + "&v=" + str(pversion) + "&l=" + str(line)
 					page = myopener.open(url)
 					print(str(line))
 				except socket.gaierror:
@@ -146,6 +143,7 @@ config['State'] = {'LastTimeCode': str(int(time.time())) }
 				   
 config.read(config_file)
 
+pversion = "2.3.1"
 password = config['Settings']['password']
 server = config['Settings']['server']
 server = server.lower()
@@ -185,7 +183,7 @@ while True:
 	if config['Settings']['AutoDectectLog'] == "True":
 		log_file, character = get_latest_log(log_dir,server)
 
-	latest_epoch = rfpiloop(server)
+	latest_epoch = rfpiloop(server,pversion)
 
 	config['State']['LastTimeCode'] = str(latest_epoch)
 	with open( config_file, 'w' ) as cf:
