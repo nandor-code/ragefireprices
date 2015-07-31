@@ -9,10 +9,16 @@ import glob
 from urllib.request import FancyURLopener
 
 def get_latest_log(p,server):
+
+	global p_loops
+	p_loops = p_loops + 1
+
+
 	newest_time = 0
 	newest_file = ""
 	file_pattern = p + "/*_" + server + ".txt"
-	print( "Searching for files: " + file_pattern )
+	if p_loops == 1:
+		print("[@]  Searching: " + file_pattern)
 
 	for fname in glob.glob(file_pattern):
 		file_time = os.path.getmtime(fname)
@@ -21,22 +27,25 @@ def get_latest_log(p,server):
 			newest_file = fname
 
 	if newest_time == 0:
-		sys.exit("HALT: No log exists" )
+		sys.exit("[ERROR] No log exists")
 
-	print ( "------------Scanning Logs------------" )
-	print ( "Detected \'" + newest_file + "\' as newest log using it." )
+	if p_loops == 1:
+		print ("[@]  Detected: " + newest_file)
 
 	pattern = re.compile(r".*eqlog_(?P<char>.*?)_" + server + ".txt", re.VERBOSE)
 	match = pattern.match(newest_file)
 
 	if match is None:
-		sys.exit("HALT: No log name is an invalid format" )
+		sys.exit("[ERROR] No log name is an invalid format" )
 
 	char = match.group("char")
 
-	print( "Using Log: " + newest_file )
-	print( "Using CharacterName: " + char )
-	print ( "--------Done Scanning Logs--------" )
+	if p_loops == 1:
+		print("[@]  Character: " + char)
+		print("[@]  Server: " + server)
+		print("#####################################################")
+		print("#############   Beginning Live Parse   ##############")
+		print("#####################################################")
 
 	char = char.lower()
 	char = char.title()
@@ -73,10 +82,16 @@ def clean_line(s):
 
 def rfpiloop(server,pversion):
 
+	## Let the user know something is
+	## happening with tick/tock
+	print("[/] check")
+	
+
+	
 	ret_time = int( config['State']['LastTimeCode'] )
 	
-	print( "------------Starting Parse------------" )
-	print( "Using Start Time: " + time.strftime( "%a %b %d %H:%M:%S %Y", time.localtime( ret_time ) ) )
+	#print( "------------Starting Parse------------" )
+	#print( "Using Start Time: " + time.strftime( "%a %b %d %H:%M:%S %Y", time.localtime( ret_time ) ) )
 	#print("Scanning logs for new data...")
 
 	with open(log_file) as f:
@@ -100,7 +115,7 @@ def rfpiloop(server,pversion):
 
 			ret_time = line_time
 
-			print( ".", end='' )
+			#print( ".", end='' )
 			sys.stdout.flush()
 
 			line = clean_line( line )
@@ -113,27 +128,38 @@ def rfpiloop(server,pversion):
 					myopener = MyOpener()
 					url = "http://ragefireprices.info/api/in.php?c=" + str(character) + "&p=" + str(password) + "&s=" + str(server) + "&v=" + str(pversion) + "&l=" + str(line)
 					page = myopener.open(url)
-					print(str(line))
+					print("[+]  " + str(line))
 				except socket.gaierror:
-					print("::: Connection Error, line unsent :::")
+					print("[-]  Connection error, previous line unsent")
 					continue
 
 				
-	print( "------------Parse Complete------------" )
 	return ret_time
 
-	
+
+
+## Initialise
+os.system("mode con cols=100 lines=40")	
+print("#####################################################")
+print("###########                                ##########")		
+print("###########   RagefirePrices.info Parser   ##########")
+print("###########                                ##########")		
+print("#####################################################")		
+		
 ## Parser start time
 p_start_time = int(time.time())
-	
+
+## Loop counter
+p_loops = 0
 	
 ## Prepare/setup/get our rfpi directory and Settings
-config_file = "Settings.ini"
+config_file = "settings.ini"
 if os.path.exists(config_file):
-	print("Settings.ini found, using it.")
+	print("[@]  settings.ini found")
 	pass
 else:
-	sys.exit("Settings.ini not found!\n\nPlease create a file called Settings.ini in the following format:\n\n[Settings]\nCharacter=YourcharacterName\nLogDir=c:\path\\to\\eq1\\logs\\")
+	sys.exit("[ERROR] Failed to open settings.ini, refer to README.txt")
+	
 
 global config
 
@@ -143,12 +169,12 @@ config['State'] = {'LastTimeCode': str(int(time.time())) }
 				   
 config.read(config_file)
 
-pversion = "2.3.1"
+pversion = "2.4"
 password = config['Settings']['password']
 server = config['Settings']['server']
 server = server.lower()
 while server not in ["ragefire","lockjaw"]:
-	sys.exit("HALT: Server entered in settings.ini not supported. Ragefire or Lockjaw only")
+	sys.exit("[ERROR] Server entered in settings.ini not supported. Ragefire or Lockjaw only")
 
 ## Check the log dir is accurate
 global log_dir
@@ -157,7 +183,7 @@ log_dir = config['Settings']['LogDir']
 if os.path.exists(log_dir):
 	pass
 else:
-	sys.exit("HALT: EverQuest Log directory incorrect, check Settings.ini")
+	sys.exit("[ERROR] EverQuest Log directory incorrect, check Settings.ini")
 
 global log_file
 global character
@@ -172,7 +198,7 @@ if config['Settings']['autodectectlog'] != "True":
 	if os.path.exists(log_file):
 		pass
 	else:
-		sys.exit("HALT: No log exists for " + character)
+		sys.exit("[ERROR] No log exists for " + character)
 
 # seed the last time code with the start-time of the parser so we ignore really old lines between parses.
 config['State']['LastTimeCode'] = str(p_start_time) 
@@ -191,4 +217,8 @@ while True:
 	
 	cf.close()
 
-	time.sleep(10)
+	time.sleep(5)
+	
+	
+	
+input("Press [Enter] to exit::")	
