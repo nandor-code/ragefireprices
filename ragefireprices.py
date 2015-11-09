@@ -106,6 +106,7 @@ def rfpiloop(server,pversion):
 			if "] you told" in line: continue
 			if "you tell your party, '" in line: continue
 			if "you say to your guild, '" in line: continue
+			if "you tell your raid, '" in line: continue
 
 			line_time = get_line_time( line )
 			
@@ -126,7 +127,7 @@ def rfpiloop(server,pversion):
 				
 				try:
 					myopener = MyOpener()
-					url = "http://ragefireprices.info/api/in.php?c=" + str(character) + "&p=" + str(password) + "&s=" + str(server) + "&v=" + str(pversion) + "&l=" + str(line)
+					url = "http://ragefireprices.info/api/in.php?c=" + str(character) + "&s=" + str(server) + "&v=" + str(pversion) + "&l=" + str(line)
 					page = myopener.open(url)
 					print("[+]  " + str(line))
 				except socket.gaierror:
@@ -169,8 +170,7 @@ config['State'] = {'LastTimeCode': str(int(time.time())) }
 				   
 config.read(config_file)
 
-pversion = "2.4"
-password = config['Settings']['password']
+pversion = "2.5"
 server = config['Settings']['server']
 server = server.lower()
 while server not in ["ragefire","lockjaw"]:
