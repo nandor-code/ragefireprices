@@ -102,11 +102,11 @@ def rfpiloop(server,pversion):
 			if "tells the group, '" in line: continue
 			if "tells the guild, '" in line: continue
 			if "tells the raid, '" in line: continue
-			if "you say, '" in line: continue
-			if "] you told" in line: continue
-			if "you tell your party, '" in line: continue
-			if "you say to your guild, '" in line: continue
-			if "you tell your raid, '" in line: continue
+			if "You say, '" in line: continue
+			if "You told " in line: continue
+			if "You tell your party, '" in line: continue
+			if "You say to your guild, '" in line: continue
+			if "You tell your raid, '" in line: continue
 
 			line_time = get_line_time( line )
 			
