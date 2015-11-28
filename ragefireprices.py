@@ -173,8 +173,8 @@ config.read(config_file)
 pversion = "2.5"
 server = config['Settings']['server']
 server = server.lower()
-while server not in ["ragefire","lockjaw"]:
-	sys.exit("[ERROR] Server entered in settings.ini not supported. Ragefire or Lockjaw only")
+while server not in ["ragefire","lockjaw","phinigel"]:
+	sys.exit("[ERROR] Server entered in settings.ini not supported. Ragefire, Lockjaw or Phinigel only")
 
 ## Check the log dir is accurate
 global log_dir
@@ -183,7 +183,7 @@ log_dir = config['Settings']['LogDir']
 if os.path.exists(log_dir):
 	pass
 else:
-	sys.exit("[ERROR] EverQuest Log directory incorrect, check Settings.ini")
+	sys.exit("[ERROR] EverQuest Log directory incorrect, check settings.ini")
 
 global log_file
 global character
