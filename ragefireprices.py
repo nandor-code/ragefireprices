@@ -88,7 +88,7 @@ def rfpiloop(server,pversion):
 	
 
 	
-	ret_time = int( config['State']['LastTimeCode'] )
+	ret_time = int( config['state']['LastTimeCode'] )
 	
 	#print( "------------Starting Parse------------" )
 	#print( "Using Start Time: " + time.strftime( "%a %b %d %H:%M:%S %Y", time.localtime( ret_time ) ) )
@@ -111,7 +111,7 @@ def rfpiloop(server,pversion):
 			line_time = get_line_time( line )
 			
 			## Skip lines older than last seen time
-			if line_time <= int( config['State']['LastTimeCode'] ):
+			if line_time <= int( config['state']['LastTimeCode'] ):
 				continue
 
 			ret_time = line_time
@@ -153,32 +153,32 @@ p_start_time = int(time.time())
 ## Loop counter
 p_loops = 0
 	
-## Prepare/setup/get our rfpi directory and Settings
-config_file = "settings.ini"
+## Prepare/setup/get our rfpi directory and settings
+config_file = "Settings.ini"
 if os.path.exists(config_file):
 	print("[@]  settings.ini found")
 	pass
 else:
-	sys.exit("[ERROR] Failed to open settings.ini, refer to README.txt")
+	sys.exit("[ERROR] Failed to open settings.ini")
 	
 
 global config
 
 config = configparser.ConfigParser()
-config['Settings'] = {'AutoDectectLog': "False" }
-config['State'] = {'LastTimeCode': str(int(time.time())) }
+config['autod'] = {'AutoDectectLog': "False" }
+config['state'] = {'LastTimeCode': str(int(time.time())) }
 				   
 config.read(config_file)
 
-pversion = "2.5"
-server = config['Settings']['server']
+pversion = "3"
+server = config['settings']['server']
 server = server.lower()
 while server not in ["ragefire","lockjaw","phinigel"]:
 	sys.exit("[ERROR] Server entered in settings.ini not supported. Ragefire, Lockjaw or Phinigel only")
 
 ## Check the log dir is accurate
 global log_dir
-log_dir = config['Settings']['LogDir']
+log_dir = config['settings']['LogDir']
 
 if os.path.exists(log_dir):
 	pass
@@ -188,8 +188,8 @@ else:
 global log_file
 global character
 
-if config['Settings']['autodectectlog'] != "True":
-	character = config['Settings']['Character']
+if config['autod']['autodectectlog'] != "True":
+	character = config['settings']['Character']
 	character = character.lower()
 	character = character.title()
 	
@@ -201,23 +201,23 @@ if config['Settings']['autodectectlog'] != "True":
 		sys.exit("[ERROR] No log exists for " + character)
 
 # seed the last time code with the start-time of the parser so we ignore really old lines between parses.
-config['State']['LastTimeCode'] = str(p_start_time) 
+config['state']['LastTimeCode'] = str(p_start_time) 
 
 ## Loop		
 while True:
 	## Do our thang
-	if config['Settings']['AutoDectectLog'] == "True":
+	if config['autod']['AutoDectectLog'] == "True":
 		log_file, character = get_latest_log(log_dir,server)
 
 	latest_epoch = rfpiloop(server,pversion)
 
-	config['State']['LastTimeCode'] = str(latest_epoch)
+	config['state']['LastTimeCode'] = str(latest_epoch)
 	with open( config_file, 'w' ) as cf:
 		config.write(cf)
 	
 	cf.close()
 
-	time.sleep(5)
+	time.sleep(10)
 	
 	
 	
