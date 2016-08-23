@@ -6,6 +6,7 @@ import time
 import re
 import urllib.request
 import glob
+import logging
 from urllib.request import FancyURLopener
 
 def get_latest_log(p,server):
@@ -27,7 +28,11 @@ def get_latest_log(p,server):
 			newest_file = fname
 
 	if newest_time == 0:
-		sys.exit("[ERROR] No log exists")
+		print("\033[91m[X] Cannot find log file")
+		print("[X] Parser will close automatically in 60 seconds \033[0m")	
+		logging.error("Log file is incorrectly named")
+		time.sleep(60)
+		sys.exit()
 
 	if p_loops == 1:
 		print ("[@]  Detected: " + newest_file)
@@ -36,7 +41,11 @@ def get_latest_log(p,server):
 	match = pattern.match(newest_file)
 
 	if match is None:
-		sys.exit("[ERROR] No log name is an invalid format" )
+		print("\033[91m[X] Invalid log file")
+		print("[X] Parser will close automatically in 60 seconds \033[0m")	
+		logging.error("Log file is incorrectly named")
+		time.sleep(60)
+		sys.exit()
 
 	char = match.group("char")
 
@@ -44,7 +53,7 @@ def get_latest_log(p,server):
 		print("[@]  Character: " + char)
 		print("[@]  Server: " + server)
 		print("#####################################################")
-		print("#############   Beginning Live Parse   ##############")
+		print("############   Beginning Live Parse   ##############")
 		print("#####################################################")
 
 	char = char.lower()
@@ -82,17 +91,11 @@ def clean_line(s):
 
 def rfpiloop(server,pversion):
 
-	## Let the user know something is
-	## happening with tick/tock
+	# Let the user know something is
+	# happening with tick/tock
 	print("[/] check")
 	
-
-	
 	ret_time = int( config['state']['LastTimeCode'] )
-	
-	#print( "------------Starting Parse------------" )
-	#print( "Using Start Time: " + time.strftime( "%a %b %d %H:%M:%S %Y", time.localtime( ret_time ) ) )
-	#print("Scanning logs for new data...")
 
 	with open(log_file) as f:
 		for line in f:
@@ -110,7 +113,7 @@ def rfpiloop(server,pversion):
 
 			line_time = get_line_time( line )
 			
-			## Skip lines older than last seen time
+			# Skip lines older than last seen time
 			if line_time <= int( config['state']['LastTimeCode'] ):
 				continue
 
@@ -139,27 +142,34 @@ def rfpiloop(server,pversion):
 
 
 
-## Initialise
+# Initialise
 os.system("mode con cols=100 lines=40")	
 print("#####################################################")
-print("###########                                ##########")		
-print("###########   RagefirePrices.info Parser   ##########")
-print("###########                                ##########")		
+print("##########                                ##########")		
+print("##########   RagefirePrices.info Parser   ##########")
+print("##########                                ##########")		
 print("#####################################################")		
 		
-## Parser start time
+# Parser start time
 p_start_time = int(time.time())
 
-## Loop counter
+# Check/create parser error logs
+logging.basicConfig(filename='parserdebug.log',level=logging.DEBUG,format='%(asctime)s %(message)s')
+
+# Loop counter
 p_loops = 0
 	
-## Prepare/setup/get our rfpi directory and settings
-config_file = "Settings.ini"
+# Prepare/setup/get our rfpi directory and settings
+config_file = "settings.ini"
 if os.path.exists(config_file):
 	print("[@]  settings.ini found")
 	pass
 else:
-	sys.exit("[ERROR] Failed to open settings.ini")
+	print("\033[91m[X] Could not find settings.ini file")
+	print("[X] Parser will close automatically in 60 seconds \033[0m")	
+	logging.error("Failed to open settings.ini file")
+	time.sleep(60)
+	sys.exit()
 	
 
 global config
@@ -170,20 +180,29 @@ config['state'] = {'LastTimeCode': str(int(time.time())) }
 				   
 config.read(config_file)
 
-pversion = "3"
+pversion = "4"
 server = config['settings']['server']
 server = server.lower()
 while server not in ["ragefire","lockjaw","phinigel"]:
-	sys.exit("[ERROR] Server entered in settings.ini not supported. Ragefire, Lockjaw or Phinigel only")
+	print("\033[91m[X] Server entered in settings.ini is not supported")
+	print("[X] Ragefire, Lockjaw or Phinigel only")
+	print("[X] Parser will close automatically in 60 seconds \033[0m")	
+	logging.error("Server not supported")
+	time.sleep(60)
+	sys.exit()
 
-## Check the log dir is accurate
+# Check the log dir is accurate
 global log_dir
 log_dir = config['settings']['LogDir']
 
 if os.path.exists(log_dir):
 	pass
 else:
-	sys.exit("[ERROR] EverQuest Log directory incorrect, check settings.ini")
+	print("\033[91m[X] Could not find EverQuest Logs directory, please check settings.ini")
+	print("[X] Parser will close automatically in 60 seconds \033[0m")	
+	logging.error("Could not find EverQuest Logs directory")
+	time.sleep(60)
+	sys.exit()
 
 global log_file
 global character
@@ -193,19 +212,23 @@ if config['autod']['autodectectlog'] != "True":
 	character = character.lower()
 	character = character.title()
 	
-	## Define our log filename, check it exists 
+	# Define our log filename, check it exists 
 	log_file = log_dir + "\eqlog_" + character + "_" + server + ".txt"
 	if os.path.exists(log_file):
 		pass
 	else:
-		sys.exit("[ERROR] No log exists for " + character)
+		print("\033[91m[X] Could not find log file for " + character)
+		print("[X] Parser will close automatically in 60 seconds \033[0m")	
+		logging.error("Could not find character log file")
+		time.sleep(60)
+		sys.exit()
 
 # seed the last time code with the start-time of the parser so we ignore really old lines between parses.
 config['state']['LastTimeCode'] = str(p_start_time) 
 
-## Loop		
+# Loop		
 while True:
-	## Do our thang
+	# Do our thang
 	if config['autod']['AutoDectectLog'] == "True":
 		log_file, character = get_latest_log(log_dir,server)
 
@@ -216,9 +239,4 @@ while True:
 		config.write(cf)
 	
 	cf.close()
-
 	time.sleep(10)
-	
-	
-	
-input("Press [Enter] to exit::")	
